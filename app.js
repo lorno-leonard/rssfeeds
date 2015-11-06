@@ -63,7 +63,7 @@ app.get('/feeds', function(req, res) {
   );
 });
 
-app.get('/feeds/:id/like', function(req, res) {
+app.post('/feeds/:id/like', function(req, res) {
   mysql.query('SELECT * FROM feeds WHERE feedId = ?',
     [req.params.id],
     function(err, rows) {
@@ -90,7 +90,7 @@ app.get('/feeds/:id/like', function(req, res) {
   );
 });
 
-app.get('/feeds/:id/unlike', function(req, res) {
+app.post('/feeds/:id/unlike', function(req, res) {
   mysql.query('SELECT * FROM feeds WHERE feedId = ?',
     [req.params.id],
     function(err, rows) {
