@@ -1,0 +1,16 @@
+{
+  "name": "rssfeeds",
+  "version": "0.0.0",
+  "description": "Fetches rss feeds",
+  "main": "app.js",
+  "scripts": {
+    "test": "mocha -b test"
+  },
+  "author": "Roger Madjos <roger.madjos@gmal.com>",
+  "license": "ISC",
+  "dependencies": {
+    "feedparser": "^1.1.4",
+    "lodash": "^3.10.1",
+    "request": "^2.65.0"
+  }
+}
