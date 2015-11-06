@@ -1,0 +1,10 @@
+{
+	"dev": {
+		"driver": "mysql",
+		"user": "root",
+		"password": "",
+		"host": "127.0.0.1",
+		"database": "rssfeeds",
+		"port": 3306
+	}
+}
