@@ -64,7 +64,7 @@ var feeds = module.exports = {
             return callback();
           }
           async.each(articles, function(article, callback) {
-            var feedId = article.permalink || article.guid;
+            var feedId = new Buffer(article.permalink || article.guid).toString('base64');
             mysql.query('INSERT INTO feeds (feedId, body) VALUES (?, ?)', [
               feedId,
               JSON.stringify(article)

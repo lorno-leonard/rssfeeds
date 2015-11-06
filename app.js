@@ -6,18 +6,40 @@ var feeds = require('./feeds'),
   app = express(),
   mysql = require('./mysql'),
   config = require('./config'),
-  _ = require('lodash');
+  async = require('async'),
+  _ = require('lodash'),
+  bodyParser = require('body-parser'),
+  uuid = require('uuid'),
+  cookieParser = require('cookie-parser'),
+  multiline = require('multiline').stripIndent;
 
+app.use(bodyParser.json());
+app.use(cookieParser());
 app.set('json spaces', 4);
+
+app.use(function(req, res, next) {
+  if(!req.cookies[config.cookie]) {
+    res.cookie(config.cookie, uuid.v1(), {
+      httpOnly:true
+    });
+  }
+  next();
+});
 
 app.get('/feeds', function(req, res) {
   var limit = +req.query.limit || 100;
   var offset = ~~req.query.offset;
 
   mysql.query(
-    'SELECT body, likes FROM feeds ORDER BY likes ASC, createdAt DESC LIMIT ? OFFSET ?',
+    multiline(function() {/*
+      SELECT feeds.body, feeds.feedId
+      FROM feeds
+      ORDER BY createdAt DESC
+      LIMIT ? OFFSET ?
+    */}),
     [limit, offset],
     function(err, rows) {
+      console.log(rows);
       if(err) {
         console.error(err);
         return res.sendStatus(500);
@@ -26,7 +48,7 @@ app.get('/feeds', function(req, res) {
         var obj;
         try {
           obj = JSON.parse(row.body);
-          obj.likes = row.likes;
+          _.assign(obj, _.pick(row, ['numLikes', 'liked', 'feedId']));
           return obj;
         } catch(err) {
           console.error(err);
@@ -34,6 +56,58 @@ app.get('/feeds', function(req, res) {
       });
       feeds = _.compact(feeds);
       res.json(feeds);
+    }
+  );
+});
+
+app.get('/feeds/:id/like', function(req, res) {
+  mysql.query('SELECT * FROM feeds WHERE feedId = ?',
+    [req.params.id],
+    function(err, rows) {
+      if(err) {
+        console.error(err);
+        return res.sendStatus(500);
+      }
+      if(rows.length === 0) {
+        return res.sendStatus(404);
+      }
+      mysql.query('INSERT INTO likes (userId, feedId) VALUES (?, ?)', [
+        req.cookies[config.cookie],
+        req.params.id
+      ], function(err) {
+        if(err) {
+          if(err.code !== 'ER_DUP_ENTRY') {
+            console.error(err);
+            return res.sendStatus(500);
+          }
+        }
+        res.end();
+      });
+    }
+  );
+});
+
+app.get('/feeds/:id/unlike', function(req, res) {
+  mysql.query('SELECT * FROM feeds WHERE feedId = ?',
+    [req.params.id],
+    function(err, rows) {
+      if(err) {
+        console.error(err);
+        return res.sendStatus(500);
+      }
+      if(rows.length === 0) {
+        return res.sendStatus(404);
+      }
+      mysql.query('DELETE FROM likes WHERE userId = ?, feedId = ?', [
+        req.cookies[config.cookie],
+        req.params.id
+      ], function(err) {
+        if(err) {
+          console.error(err);
+          return res.sendStatus(500);
+        }
+        res.end();
+      });
     }
   );
 });

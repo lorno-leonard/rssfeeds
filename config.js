@@ -12,5 +12,6 @@ module.exports = {
     database: 'rssfeeds'
   },
   fetchInterval: 30000,
-  port: 80
+  port: 80,
+  cookie: 'sessId'
 };
