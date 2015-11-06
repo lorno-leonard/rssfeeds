@@ -32,12 +32,14 @@ app.get('/feeds', function(req, res) {
 
   mysql.query(
     multiline(function() {/*
-      SELECT feeds.body, feeds.feedId
+      SELECT feeds.feedId, body,
+      (SELECT COUNT(*) FROM likes WHERE feeds.feedId = likes.feedId) AS likes,
+      (SELECT COUNT(*) FROM likes WHERE feeds.feedId = likes.feedId AND userId = ?) AS liked
       FROM feeds
-      ORDER BY createdAt DESC
+      ORDER BY likes DESC, createdAt DESC
       LIMIT ? OFFSET ?
     */}),
-    [limit, offset],
+    [req.cookies[config.cookie], limit, offset],
     function(err, rows) {
       console.log(rows);
       if(err) {
@@ -48,7 +50,8 @@ app.get('/feeds', function(req, res) {
         var obj;
         try {
           obj = JSON.parse(row.body);
-          _.assign(obj, _.pick(row, ['numLikes', 'liked', 'feedId']));
+          _.assign(obj, _.pick(row, ['likes', 'liked', 'feedId']));
+          obj.liked = !!obj.liked;
           return obj;
         } catch(err) {
           console.error(err);
