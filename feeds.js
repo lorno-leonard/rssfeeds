@@ -45,7 +45,8 @@ feeds.fetch = function(url, callback) {
           'author',
           'permalink',
           'guid',
-          'image'
+          'image',
+          'link'
         ]));
       }
     } while (item);

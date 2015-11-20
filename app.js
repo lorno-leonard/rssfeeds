@@ -36,7 +36,7 @@ app.get('/feeds', function(req, res) {
 
   mysql.query(
     multiline(function() {/*
-      SELECT feeds.feedId, body,
+      SELECT feeds.feedId, body, createdAt,
       (SELECT COUNT(*) FROM likes WHERE feeds.feedId = likes.feedId) AS likes,
       (SELECT COUNT(*) FROM likes WHERE feeds.feedId = likes.feedId AND userId = ?) AS liked
       FROM feeds
@@ -54,7 +54,8 @@ app.get('/feeds', function(req, res) {
         var obj;
         try {
           obj = JSON.parse(row.body);
-          _.assign(obj, _.pick(row, ['likes', 'liked', 'feedId']));
+          _.assign(obj, _.pick(row, ['likes', 'liked', 'feedId', 'createdAt']));
+          obj.createdAt = new Date(obj.createdAt).getTime();
           obj.liked = !!obj.liked;
           return obj;
         } catch(err) {
