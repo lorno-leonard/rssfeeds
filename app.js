@@ -4,6 +4,7 @@
 var feeds = require('./feeds'),
   express = require('express'),
   app = express(),
+  server = require('http').Server(app),
   mysql = require('./mysql'),
   config = require('./config'),
   async = require('async'),
@@ -11,7 +12,8 @@ var feeds = require('./feeds'),
   bodyParser = require('body-parser'),
   uuid = require('uuid'),
   cookieParser = require('cookie-parser'),
-  multiline = require('multiline').stripIndent;
+  multiline = require('multiline').stripIndent,
+  io = require('socket.io')(server);
 
 app.use(bodyParser.json());
 app.use(cookieParser());
@@ -85,6 +87,15 @@ app.post('/feeds/:id/like', function(req, res) {
           }
         }
         res.end();
+        mysql.query('SELECT COUNT(*) AS likes FROM likes WHERE feedId = ?', [
+          req.params.id
+        ], function(err, rows) {
+          if(err) return console.error(err);
+          io.emit('likes', {
+            likes: _.first(rows).likes,
+            feedId: req.params.id
+          });
+        });
       });
     }
   );
@@ -110,13 +121,26 @@ app.post('/feeds/:id/unlike', function(req, res) {
           return res.sendStatus(500);
         }
         res.end();
+        mysql.query('SELECT COUNT(*) AS likes FROM likes WHERE feedId = ?', [
+          req.params.id
+        ], function(err, rows) {
+          if(err) return console.error(err);
+          io.emit('likes', {
+            likes: _.first(rows).likes,
+            feedId: req.params.id
+          });
+        });
       });
     }
   );
 });
 
-app.listen(config.port, function() {
+server.listen(config.port, function() {
   console.log('Server started');
 });
 
 feeds.startFetch();
+
+feeds.on('newFeeds', function(newFeeds) {
+  io.emit('newFeeds', newFeeds);
+});
