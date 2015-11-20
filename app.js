@@ -19,6 +19,8 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.set('json spaces', 4);
 
+app.use(express.static('public'));
+
 app.use(function(req, res, next) {
   if(!req.cookies[config.cookie]) {
     res.cookie(config.cookie, uuid.v1(), {
