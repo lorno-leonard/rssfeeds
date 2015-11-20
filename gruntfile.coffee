@@ -33,15 +33,32 @@ module.exports = (grunt)->
         ]
         dest: 'public/js/app.js'
     cssmin:
+      options:
+        keepSpecialComments: 0
       css:
         src: 'public/css/app.css'
-        dest: 'public/css/app.min.css'
+        dest: 'public/css/app.css'
     copy:
       fonts:
         expand: true
         cwd: 'bower_components/bootstrap/fonts'
         src: ['*']
         dest: 'public/fonts'
+      images:
+        expand: true
+        cwd: 'src/images'
+        src: ['*']
+        dest: 'public/images'
+    uglify:
+      options:
+        mangle: false
+        preserveComments: false
+      vendor:
+        files:
+          'public/js/vendor.js': ['public/js/vendor.js']
+      angular:
+        files:
+          'public/js/app.js': ['public/js/app.js']
     watch:
       templates:
         files: [
@@ -62,15 +79,21 @@ module.exports = (grunt)->
           'src/angular/run.js'
         ]
         tasks: ['angular']
+      images:
+        files: [
+          'src/images/*'
+        ]
+        tasks: ['images']
 
   grunt.registerTask 'templates', ['concat:templates']
-  grunt.registerTask 'vendor', ['concat:vendor']
-  grunt.registerTask 'css', ['concat:css']
-  grunt.registerTask 'angular', ['concat:angular']
+  grunt.registerTask 'css', ['concat:css', 'cssmin:css']
+  grunt.registerTask 'vendor', ['concat:vendor', 'uglify:vendor']
+  grunt.registerTask 'angular', ['concat:angular', 'uglify:angular']
+  grunt.registerTask 'images', ['copy:images']
   grunt.registerTask 'dev', [
     'templates',
-    'vendor',
     'css',
+    'vendor',
     'angular',
     'copy',
     'watch'
